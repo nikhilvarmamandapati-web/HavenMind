@@ -1,0 +1,44 @@
+import '../models/wellness_models.dart';
+
+class CognitiveReframerService {
+  static List<DistortionResult> analyzeThought(String rawText) {
+    final text = rawText.toLowerCase();
+    final results = <DistortionResult>[];
+
+    if (text.contains('always') ||
+        text.contains('never') ||
+        text.contains('failure') ||
+        text.contains('worthless') ||
+        text.contains('ruined')) {
+      results.add(DistortionResult(
+        name: 'All-or-Nothing Extremes',
+        explanation: 'Seeing things in absolute black-or-white terms without room for progress.',
+        gentleReframe: 'Emotions are intense right now, but situations are rarely all-or-nothing. Even small steps count.',
+      ));
+    }
+
+    if (text.contains('disaster') ||
+        text.contains('end of the world') ||
+        text.contains('unbearable') ||
+        text.contains('cannot survive') ||
+        text.contains('worst')) {
+      results.add(DistortionResult(
+        name: 'Expecting the Worst (Catastrophizing)',
+        explanation: 'Anticipating total catastrophe before things even happen.',
+        gentleReframe: 'Your nervous system is on high alert. Take a slow exhale; you have made it through 100% of your hard days so far.',
+      ));
+    }
+
+    if (text.contains('should have') ||
+        text.contains('must be') ||
+        text.contains('supposed to be')) {
+      results.add(DistortionResult(
+        name: 'Harsh "Should" Rules',
+        explanation: 'Holding yourself to rigid rules that cause guilt and shame.',
+        gentleReframe: 'Replace "I should" with "I am doing the best I can with the energy I have today."',
+      ));
+    }
+
+    return results;
+  }
+}
