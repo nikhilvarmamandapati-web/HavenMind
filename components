@@ -922,4 +922,1414 @@ flutter:
     </div>
   );
 }
+import { useState } from 'react';
+import { ShieldAlert, X, Heart, Eye, Hand, Volume2, Sparkles, PhoneCall, MessageSquare } from 'lucide-react';
+import { soundEngine } from '../services/soundEngine';
 
+interface GroundingModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export function GroundingModal({ isOpen, onClose }: GroundingModalProps) {
+  const [currentStep, setCurrentStep] = useState<number>(0);
+  const [checkedItems, setCheckedItems] = useState<boolean[]>([false, false, false, false, false]);
+
+  if (!isOpen) return null;
+
+  const steps = [
+    {
+      count: 5,
+      sense: 'SEE',
+      prompt: 'Acknowledge 5 things you see around you right now.',
+      hint: 'Look for subtle details: a speck of dust, pattern on the floor, texture on a wall, shade of green.',
+      icon: Eye,
+      color: 'text-emerald-700 bg-emerald-50',
+    },
+    {
+      count: 4,
+      sense: 'TOUCH',
+      prompt: 'Acknowledge 4 things you can physically feel.',
+      hint: 'Your feet on the ground, clothing against your skin, cold water in a glass, weight of your hands.',
+      icon: Hand,
+      color: 'text-amber-700 bg-amber-50',
+    },
+    {
+      count: 3,
+      sense: 'HEAR',
+      prompt: 'Acknowledge 3 things you can hear right now.',
+      hint: 'Distant traffic, hum of a fan, your own breath, clock ticking.',
+      icon: Volume2,
+      color: 'text-sky-700 bg-sky-50',
+    },
+    {
+      count: 2,
+      sense: 'SMELL',
+      prompt: 'Acknowledge 2 things you can smell or enjoy.',
+      hint: 'Coffee, fabric softener, fresh air from a window, or simply imagine the scent of pine needles.',
+      icon: Sparkles,
+      color: 'text-indigo-700 bg-indigo-50',
+    },
+    {
+      count: 1,
+      sense: 'TASTE',
+      prompt: 'Acknowledge 1 thing you can taste, or take a cool sip of water.',
+      hint: 'The lingering taste of mint, tea, or swallow saliva and feel your throat gently relax.',
+      icon: Heart,
+      color: 'text-rose-700 bg-rose-50',
+    },
+  ];
+
+  const handleStepComplete = () => {
+    soundEngine.playSingingBowl(528, 2);
+    if (currentStep < steps.length - 1) {
+      setCurrentStep(currentStep + 1);
+    } else {
+      // Completed all 5 steps
+      const newChecked = [...checkedItems];
+      newChecked[currentStep] = true;
+      setCheckedItems(newChecked);
+    }
+  };
+
+  const handleReset = () => {
+    setCurrentStep(0);
+    setCheckedItems([false, false, false, false, false]);
+  };
+
+  const activeStepData = steps[currentStep];
+  const StepIcon = activeStepData.icon;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-stone-200 overflow-hidden flex flex-col max-h-[90vh]">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-stone-100 bg-stone-50/70">
+          <div className="flex items-center gap-2">
+            <span className="w-8 h-8 rounded-full bg-rose-100 text-rose-800 flex items-center justify-center">
+              <ShieldAlert className="w-4 h-4" />
+            </span>
+            <div>
+              <h2 className="text-base font-bold text-stone-900 leading-tight">Calm Down (5-4-3-2-1 Technique)</h2>
+              <p className="text-xs text-stone-500">A quick exercise to bring you back when feeling panicky or overwhelmed</p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Close grounding modal"
+            className="w-9 h-9 rounded-full flex items-center justify-center text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Modal Body */}
+        <div className="p-6 overflow-y-auto space-y-6">
+          {/* Progress Tracker */}
+          <div className="flex items-center justify-between gap-2">
+            {steps.map((st, idx) => (
+              <button
+                key={st.count}
+                onClick={() => setCurrentStep(idx)}
+                className={`flex-1 py-1.5 px-1 text-center rounded-lg text-xs font-medium transition-all ${
+                  idx === currentStep
+                    ? 'bg-stone-900 text-white shadow-sm'
+                    : idx < currentStep
+                    ? 'bg-emerald-100 text-emerald-800'
+                    : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                }`}
+              >
+                {st.count} {st.sense}
+              </button>
+            ))}
+          </div>
+
+          {/* Current Step Card */}
+          <div className="p-5 rounded-2xl bg-stone-50 border border-stone-200/80 space-y-4">
+            <div className="flex items-start gap-4">
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${activeStepData.color}`}>
+                <StepIcon className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <span className="text-xs font-semibold tracking-wider text-emerald-800 uppercase">
+                  Step {currentStep + 1} of 5
+                </span>
+                <h3 className="text-lg font-semibold text-stone-900">{activeStepData.prompt}</h3>
+                <p className="text-sm text-stone-600 leading-relaxed">{activeStepData.hint}</p>
+              </div>
+            </div>
+
+            <div className="pt-2 flex items-center justify-between">
+              <button
+                onClick={handleStepComplete}
+                className="px-5 py-2.5 rounded-xl bg-emerald-800 hover:bg-emerald-700 text-white font-medium text-sm transition-all shadow-sm active:scale-95 flex items-center gap-2"
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>{currentStep === 4 ? 'Complete Grounding' : 'I Found These · Next Sense'}</span>
+              </button>
+
+              <button
+                onClick={handleReset}
+                className="text-xs text-stone-500 hover:text-stone-800 transition-colors"
+              >
+                Start Over
+              </button>
+            </div>
+          </div>
+
+          {/* Direct Emergency Resources */}
+          <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/60 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-amber-900 text-xs font-semibold uppercase tracking-wider">
+                <PhoneCall className="w-3.5 h-3.5" />
+                <span>Confidential Free Lifelines</span>
+              </div>
+              <span className="text-xs text-amber-800 font-medium">Available 24/7</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+              <a
+                href="tel:988"
+                className="flex items-center justify-between p-2.5 rounded-xl bg-white border border-amber-200 text-stone-900 hover:bg-amber-100/50 transition-colors"
+              >
+                <div>
+                  <div className="font-semibold text-stone-900">988 Suicide & Crisis</div>
+                  <div className="text-[11px] text-stone-500">Call or Text (US & Canada)</div>
+                </div>
+                <PhoneCall className="w-4 h-4 text-emerald-700" />
+              </a>
+
+              <a
+                href="sms:741741?body=HOME"
+                className="flex items-center justify-between p-2.5 rounded-xl bg-white border border-amber-200 text-stone-900 hover:bg-amber-100/50 transition-colors"
+              >
+                <div>
+                  <div className="font-semibold text-stone-900">Crisis Text Line</div>
+                  <div className="text-[11px] text-stone-500">Text HOME to 741741</div>
+                </div>
+                <MessageSquare className="w-4 h-4 text-emerald-700" />
+              </a>
+            </div>
+            <p className="text-[11px] text-amber-900/80 leading-normal">
+              If you or someone you know is in immediate physical danger, please contact your local emergency services (911 / 112 / 999) or nearest hospital.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+import { useState } from 'react';
+import { Sparkles, Heart, Plus, Send, ShieldCheck, Compass, HelpCircle } from 'lucide-react';
+import { soundEngine } from '../services/soundEngine';
+import { INITIAL_BEACONS } from '../data/initialData';
+import { KindnessBeacon, KindnessPebble } from '../types';
+
+export function KindnessExchange() {
+  const [beacons, setBeacons] = useState<KindnessBeacon[]>(INITIAL_BEACONS);
+  const [selectedBeaconId, setSelectedBeaconId] = useState<string>(INITIAL_BEACONS[0].id);
+  const [newPebbleMessage, setNewPebbleMessage] = useState<string>('');
+  const [selectedTexture, setSelectedTexture] = useState<'moss-green' | 'river-slate' | 'warm-amber' | 'dawn-rose'>('river-slate');
+  const [isCreatingBeacon, setIsCreatingBeacon] = useState<boolean>(false);
+  const [newBeaconPrompt, setNewBeaconPrompt] = useState<string>('');
+  const [newBeaconEnergy, setNewBeaconEnergy] = useState<KindnessBeacon['neededEnergy']>('Gentle Comfort');
+  const [totalRipplesToday, setTotalRipplesToday] = useState<number>(389);
+
+  const activeBeacon = beacons.find((b) => b.id === selectedBeaconId) || beacons[0];
+
+  const handleDropPebble = () => {
+    if (!newPebbleMessage.trim() || !activeBeacon) return;
+
+    soundEngine.playPebbleDrop();
+    soundEngine.playSingingBowl(528, 2.5);
+
+    const newPebble: KindnessPebble = {
+      id: 'peb-' + Date.now(),
+      senderPseudonym: 'KindFriend',
+      auraColor: selectedTexture === 'moss-green' ? '#10b981' : selectedTexture === 'warm-amber' ? '#f59e0b' : selectedTexture === 'dawn-rose' ? '#ec4899' : '#0ea5e9',
+      message: newPebbleMessage.trim(),
+      stoneTexture: selectedTexture,
+      createdAt: 'Just now',
+    };
+
+    setBeacons((prev) =>
+      prev.map((b) => (b.id === activeBeacon.id ? { ...b, pebbles: [newPebble, ...b.pebbles] } : b))
+    );
+
+    setTotalRipplesToday((t) => t + 1);
+    setNewPebbleMessage('');
+  };
+
+  const handleCreateBeacon = () => {
+    if (!newBeaconPrompt.trim()) return;
+
+    const beacon: KindnessBeacon = {
+      id: 'b-' + Date.now(),
+      requesterPseudonym: 'SomeoneSeekingCourage',
+      auraGradient: 'from-teal-400 to-emerald-500',
+      prompt: newBeaconPrompt.trim(),
+      situationContext: 'Asked for community kindness',
+      neededEnergy: newBeaconEnergy,
+      isActive: true,
+      createdAt: 'Just now',
+      pebbles: [],
+    };
+
+    setBeacons([beacon, ...beacons]);
+    setSelectedBeaconId(beacon.id);
+    setIsCreatingBeacon(false);
+    setNewBeaconPrompt('');
+    soundEngine.playSingingBowl(440, 2);
+  };
+
+  const stoneStyles = {
+    'moss-green': 'bg-emerald-800 text-emerald-50 border-emerald-700',
+    'river-slate': 'bg-stone-800 text-stone-100 border-stone-700',
+    'warm-amber': 'bg-amber-800 text-amber-50 border-amber-700',
+    'dawn-rose': 'bg-rose-800 text-rose-50 border-rose-700',
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Friendly Guide Box */}
+      <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-stone-800 flex items-start gap-3">
+        <HelpCircle className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
+        <div className="space-y-1">
+          <h4 className="text-sm font-bold text-amber-950">How Kindness Cards work:</h4>
+          <p className="text-xs text-amber-900 leading-relaxed">
+            Need reassurance right now? Click <strong>"Ask for Encouragement"</strong> to post what you are nervous about. Or click on any person on the left to write them a short, caring 1-sentence note to brighten their day.
+          </p>
+        </div>
+      </div>
+
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-2 border-b border-stone-200">
+        <div>
+          <span className="text-xs font-semibold uppercase tracking-wider text-emerald-800">
+            Exchange of Warmth
+          </span>
+          <h1 className="text-2xl sm:text-3xl font-bold text-stone-900 mt-1">
+            Kindness Cards & Encouragement
+          </h1>
+          <p className="text-xs sm:text-sm text-stone-600 mt-1 max-w-2xl">
+            Short, comforting notes between real people. Give encouragement, or ask for a warm reminder when you are down.
+          </p>
+        </div>
+
+        <button
+          onClick={() => setIsCreatingBeacon(!isCreatingBeacon)}
+          className="self-start md:self-auto px-4 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 active:scale-95"
+        >
+          <Plus className="w-4 h-4 text-emerald-400" />
+          <span>{isCreatingBeacon ? 'Cancel Request' : 'Ask for Encouragement (1-Tap)'}</span>
+        </button>
+      </div>
+
+      {/* Request Form */}
+      {isCreatingBeacon && (
+        <div className="p-6 rounded-3xl bg-emerald-50/80 border border-emerald-200 space-y-4 animate-in fade-in">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-emerald-800" />
+            <h3 className="text-sm font-bold text-stone-900">What are you struggling with today?</h3>
+          </div>
+          <p className="text-xs text-stone-600">
+            Peers will read this and leave short, comforting notes for you to read whenever you feel down.
+          </p>
+
+          <input
+            type="text"
+            value={newBeaconPrompt}
+            onChange={(e) => setNewBeaconPrompt(e.target.value)}
+            placeholder="e.g. 'I have a stressful dentist visit tomorrow' or 'Feeling very lonely tonight'"
+            className="w-full px-4 py-2.5 text-xs sm:text-sm bg-white rounded-xl border border-stone-300 focus:outline-hidden focus:ring-2 focus:ring-emerald-700/20"
+          />
+
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-stone-700 font-medium">What kind of words help most?</span>
+              <select
+                value={newBeaconEnergy}
+                onChange={(e) => setNewBeaconEnergy(e.target.value as any)}
+                className="text-xs bg-white border border-stone-300 rounded-lg px-2.5 py-1.5 text-stone-800"
+              >
+                <option value="Gentle Comfort">Gentle Comfort & Hugs</option>
+                <option value="Pre-Exam Courage">Courage & Confidence</option>
+                <option value="Nighttime Calming">Nighttime Peace</option>
+                <option value="Self-Worth Reminder">Reminder That I Matter</option>
+              </select>
+            </div>
+
+            <button
+              onClick={handleCreateBeacon}
+              disabled={!newBeaconPrompt.trim()}
+              className="px-4 py-2 bg-emerald-800 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold disabled:opacity-40 transition-colors shadow-xs"
+            >
+              Post Request
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Main 2-Column Split */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Left Column: People asking for kindness */}
+        <div className="lg:col-span-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-stone-800">People who need a kind word right now:</span>
+            <span className="text-xs font-mono text-stone-500 tabular-nums">
+              {beacons.length} Requests
+            </span>
+          </div>
+
+          <div className="space-y-2.5">
+            {beacons.map((beacon) => {
+              const isSelected = beacon.id === selectedBeaconId;
+              return (
+                <button
+                  key={beacon.id}
+                  onClick={() => setSelectedBeaconId(beacon.id)}
+                  className={`w-full text-left p-4 rounded-2xl border transition-all ${
+                    isSelected
+                      ? 'bg-white border-emerald-700 shadow-md ring-2 ring-emerald-700/20'
+                      : 'bg-stone-50/80 hover:bg-white border-stone-200'
+                  }`}
+                >
+                  <div className="flex items-center justify-between text-xs text-stone-500 mb-1">
+                    <span className="font-bold text-stone-800">{beacon.requesterPseudonym}</span>
+                    <span>{beacon.createdAt}</span>
+                  </div>
+                  <h4 className="text-xs sm:text-sm font-semibold text-stone-900 leading-snug">
+                    "{beacon.prompt}"
+                  </h4>
+                  <div className="mt-2.5 flex items-center justify-between text-xs text-stone-600">
+                    <span className="text-[11px] text-emerald-800 font-semibold bg-emerald-50 px-2 py-0.5 rounded">
+                      Needs: {beacon.neededEnergy}
+                    </span>
+                    <span className="text-[11px] font-mono tabular-nums text-stone-500">
+                      {beacon.pebbles.length} notes received
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Photo Showcase */}
+          <div className="relative rounded-2xl overflow-hidden border border-stone-200 shadow-xs aspect-video">
+            <img
+              src="/src/assets/images/wellness_support_pebble_1792301073657.jpg"
+              alt="River stones of peace"
+              referrerPolicy="no-referrer"
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-stone-950/80 via-transparent to-transparent flex flex-col justify-end p-4 text-white">
+              <span className="text-xs font-semibold text-emerald-300">Daily Ripple Effect</span>
+              <p className="text-sm font-bold">{totalRipplesToday} kind notes exchanged between peers today</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column: Write Note & View Notes Received */}
+        <div className="lg:col-span-7 space-y-5">
+          {/* Active Request Details */}
+          <div className="p-5 rounded-3xl bg-white border border-stone-200 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-emerald-800">
+                Writing a note for {activeBeacon.requesterPseudonym}:
+              </span>
+              <span className="text-xs text-stone-500 font-medium">{activeBeacon.neededEnergy}</span>
+            </div>
+
+            <h3 className="text-base sm:text-lg font-bold text-stone-900">
+              "{activeBeacon.prompt}"
+            </h3>
+
+            {/* Note writing box */}
+            <div className="pt-3 border-t border-stone-100 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-stone-700">Choose Card Color:</span>
+                <div className="flex items-center gap-1.5">
+                  {(['river-slate', 'moss-green', 'warm-amber', 'dawn-rose'] as const).map((tex) => (
+                    <button
+                      key={tex}
+                      onClick={() => setSelectedTexture(tex)}
+                      className={`w-6 h-6 rounded-full border-2 transition-transform ${
+                        tex === 'moss-green'
+                          ? 'bg-emerald-600'
+                          : tex === 'warm-amber'
+                          ? 'bg-amber-500'
+                          : tex === 'dawn-rose'
+                          ? 'bg-rose-500'
+                          : 'bg-stone-700'
+                      } ${selectedTexture === tex ? 'scale-125 border-stone-900' : 'border-transparent hover:scale-110'}`}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <textarea
+                value={newPebbleMessage}
+                onChange={(e) => setNewPebbleMessage(e.target.value)}
+                maxLength={140}
+                placeholder="Write 1 or 2 comforting sentences (e.g. 'You are going to do great tomorrow. Just take it one moment at a time!')"
+                rows={2}
+                className="w-full p-3.5 rounded-xl border border-stone-200 text-xs sm:text-sm text-stone-800 focus:outline-hidden focus:ring-2 focus:ring-emerald-700/20 leading-relaxed"
+              />
+
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-stone-400 font-mono tabular-nums">
+                  {140 - newPebbleMessage.length} letters left
+                </span>
+
+                <button
+                  onClick={handleDropPebble}
+                  disabled={!newPebbleMessage.trim()}
+                  className="px-4 py-2 bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all active:scale-95 disabled:opacity-40 flex items-center gap-1.5 shadow-xs"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>Send Kindness Note</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Received Notes */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between text-xs text-stone-600">
+              <span className="font-bold">Kind Notes Already Sent to This Person</span>
+              <span>{activeBeacon.pebbles.length} notes</span>
+            </div>
+
+            {activeBeacon.pebbles.length === 0 ? (
+              <div className="p-8 rounded-2xl bg-stone-50 border border-stone-200 text-center space-y-2">
+                <Compass className="w-6 h-6 text-stone-400 mx-auto" />
+                <p className="text-xs text-stone-600">
+                  No notes yet. Be the first kind soul to write them an encouraging note above!
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {activeBeacon.pebbles.map((pebble) => (
+                  <div
+                    key={pebble.id}
+                    className={`p-4 rounded-2xl border shadow-xs transition-all space-y-1.5 ${
+                      stoneStyles[pebble.stoneTexture] || 'bg-stone-800 text-stone-100'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between text-[11px] opacity-80">
+                      <span>From {pebble.senderPseudonym}</span>
+                      <span>{pebble.createdAt}</span>
+                    </div>
+                    <p className="text-xs sm:text-sm font-medium leading-relaxed">
+                      "{pebble.message}"
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+import { useState } from 'react';
+import { X, Sparkles, Shield, AlertTriangle } from 'lucide-react';
+import { PostIntent } from '../types';
+
+interface NewPostModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (post: {
+    title: string;
+    content: string;
+    intent: PostIntent;
+    isSensitive: boolean;
+    sensitiveNotice?: string;
+  }) => void;
+}
+
+export function NewPostModal({ isOpen, onClose, onSubmit }: NewPostModalProps) {
+  const [title, setTitle] = useState<string>('');
+  const [content, setContent] = useState<string>('');
+  const [intent, setIntent] = useState<PostIntent>('Needs Gentle Listening');
+  const [isSensitive, setIsSensitive] = useState<boolean>(false);
+  const [sensitiveNotice, setSensitiveNotice] = useState<string>('');
+
+  if (!isOpen) return null;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!content.trim()) return;
+
+    onSubmit({
+      title: title.trim(),
+      content: content.trim(),
+      intent,
+      isSensitive,
+      sensitiveNotice: sensitiveNotice.trim() || undefined,
+    });
+
+    setTitle('');
+    setContent('');
+    setIsSensitive(false);
+    setSensitiveNotice('');
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm animate-in fade-in">
+      <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-stone-200 overflow-hidden flex flex-col max-h-[90vh]">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-stone-100 bg-stone-50/70">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-emerald-800" />
+            <h3 className="text-base font-bold text-stone-900">Share Your Journey</h3>
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Close dialog"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Form Body */}
+        <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-stone-700 mb-1">
+              Title (Optional)
+            </label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. Taking small breaths after a hard meeting"
+              className="w-full px-3.5 py-2 text-xs sm:text-sm bg-white border border-stone-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-emerald-700/20"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-stone-700 mb-1">
+              What would you like to express?
+            </label>
+            <textarea
+              required
+              rows={4}
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Express whatever truth is in your heart. You are safe here."
+              className="w-full p-3.5 text-xs sm:text-sm bg-white border border-stone-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-emerald-700/20 leading-relaxed"
+            />
+          </div>
+
+          {/* Intent Tag Selector */}
+          <div>
+            <label className="block text-xs font-semibold text-stone-700 mb-1">
+              Set Your Emotional Boundary Intent:
+            </label>
+            <select
+              value={intent}
+              onChange={(e) => setIntent(e.target.value as PostIntent)}
+              className="w-full px-3 py-2 text-xs sm:text-sm bg-white border border-stone-300 rounded-xl text-stone-800 focus:outline-hidden"
+            >
+              <option value="Needs Gentle Listening">Needs Gentle Listening (No Pressure)</option>
+              <option value="Validation Only - No Advice">Validation Only — No Advice Please</option>
+              <option value="Solution-Oriented Advice Welcome">Solution-Oriented Advice Welcome</option>
+              <option value="Celebrating Small Win">Celebrating Small Win</option>
+              <option value="Burnout / Heavy Vent">Burnout / Heavy Vent</option>
+            </select>
+          </div>
+
+          {/* Trigger Shield Toggle */}
+          <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200 space-y-2">
+            <div className="flex items-center justify-between">
+              <label htmlFor="isSensitiveCheckbox" className="flex items-center gap-2 cursor-pointer">
+                <input
+                  id="isSensitiveCheckbox"
+                  type="checkbox"
+                  checked={isSensitive}
+                  onChange={(e) => setIsSensitive(e.target.checked)}
+                  className="accent-emerald-700 rounded cursor-pointer"
+                />
+                <span className="text-xs font-medium text-stone-800">
+                  Enable Emotional Trigger Shield
+                </span>
+              </label>
+              <Shield className="w-4 h-4 text-stone-400" />
+            </div>
+
+            {isSensitive && (
+              <input
+                type="text"
+                value={sensitiveNotice}
+                onChange={(e) => setSensitiveNotice(e.target.value)}
+                placeholder="Brief warning label (e.g. 'Mentions panic attack & burnout')"
+                className="w-full px-3 py-1.5 text-xs bg-white border border-stone-300 rounded-lg"
+              />
+            )}
+          </div>
+
+          <div className="pt-2 flex items-center justify-end gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-xs font-medium text-stone-600 hover:text-stone-900 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={!content.trim()}
+              className="px-5 py-2.5 rounded-xl bg-emerald-800 hover:bg-emerald-700 text-white font-semibold text-xs transition-all shadow-xs disabled:opacity-40"
+            >
+              Publish to Sanctuary
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+import { useState, useEffect } from 'react';
+import { Wind, Volume2, VolumeX, Sparkles, HeartHandshake, Compass, HelpCircle } from 'lucide-react';
+import { soundEngine } from '../services/soundEngine';
+import { INITIAL_SOULS } from '../data/initialData';
+import { PresenceRipple, SilentPresenceSoul } from '../types';
+
+export function SilentPresence() {
+  const [breathingPhase, setBreathingPhase] = useState<'Inhale' | 'Hold' | 'Exhale' | 'Rest'>('Inhale');
+  const [phaseSecondsLeft, setPhaseSecondsLeft] = useState<number>(4);
+  const [technique, setTechnique] = useState<'box' | 'relax'>('box');
+  const [isPlayingAudio, setIsPlayingAudio] = useState<boolean>(false);
+  const [soundTrack, setSoundTrack] = useState<'forest_dawn' | 'theta_waves' | 'rain_mist' | 'singing_bowl_drone'>('theta_waves');
+  const [ripples, setRipples] = useState<PresenceRipple[]>([]);
+  const [souls, setSouls] = useState<SilentPresenceSoul[]>(INITIAL_SOULS);
+  const [warmthSentCount, setWarmthSentCount] = useState<number>(142);
+
+  // Breathing loop
+  useEffect(() => {
+    const cycleDurations = technique === 'box' 
+      ? { Inhale: 4, Hold: 4, Exhale: 4, Rest: 4 }
+      : { Inhale: 4, Hold: 7, Exhale: 8, Rest: 2 };
+
+    const interval = setInterval(() => {
+      setPhaseSecondsLeft((prev) => {
+        if (prev > 1) {
+          return prev - 1;
+        } else {
+          // Advance phase
+          setBreathingPhase((curr) => {
+            if (curr === 'Inhale') {
+              soundEngine.playSingingBowl(380, 2);
+              return 'Hold';
+            }
+            if (curr === 'Hold') {
+              return 'Exhale';
+            }
+            if (curr === 'Exhale') {
+              soundEngine.playSingingBowl(432, 2.5);
+              return 'Rest';
+            }
+            soundEngine.playSingingBowl(528, 2);
+            return 'Inhale';
+          });
+          const nextPhase =
+            breathingPhase === 'Inhale' ? 'Hold' :
+            breathingPhase === 'Hold' ? 'Exhale' :
+            breathingPhase === 'Exhale' ? 'Rest' : 'Inhale';
+          return cycleDurations[nextPhase];
+        }
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [technique, breathingPhase]);
+
+  // Clean old ripples after 4 seconds
+  useEffect(() => {
+    if (ripples.length === 0) return;
+    const timeout = setTimeout(() => {
+      setRipples((prev) => prev.filter((r) => Date.now() - r.timestamp < 4000));
+    }, 1000);
+    return () => clearTimeout(timeout);
+  }, [ripples]);
+
+  // Handle ambient track change
+  const toggleAudio = (track = soundTrack) => {
+    if (isPlayingAudio && soundTrack === track) {
+      soundEngine.stopAmbiance();
+      setIsPlayingAudio(false);
+    } else {
+      soundEngine.startAmbiance(track);
+      setSoundTrack(track);
+      setIsPlayingAudio(true);
+    }
+  };
+
+  const handleSendWarmth = () => {
+    soundEngine.playPebbleDrop();
+    soundEngine.playSingingBowl(528, 3);
+    setWarmthSentCount((c) => c + 1);
+
+    const newRipple: PresenceRipple = {
+      id: 'rip-' + Date.now(),
+      senderPseudonym: 'You',
+      message: 'Sending you a gentle hug',
+      color: '#10b981',
+      x: 50 + (Math.random() * 20 - 10),
+      y: 50 + (Math.random() * 20 - 10),
+      timestamp: Date.now(),
+    };
+    setRipples((prev) => [...prev, newRipple]);
+
+    // Simulated warm response from another peer
+    setTimeout(() => {
+      const soul = souls[Math.floor(Math.random() * souls.length)];
+      setRipples((prev) => [
+        ...prev,
+        {
+          id: 'rip-resp-' + Date.now(),
+          senderPseudonym: soul.pseudonym,
+          message: 'Received your warmth · Thank you',
+          color: soul.auraColor,
+          x: soul.x,
+          y: soul.y,
+          timestamp: Date.now(),
+        },
+      ]);
+    }, 1600);
+  };
+
+  const getOrbScale = () => {
+    if (breathingPhase === 'Inhale') return 'scale-125 transition-transform duration-[4000ms] ease-out';
+    if (breathingPhase === 'Hold') return 'scale-125 transition-none';
+    if (breathingPhase === 'Exhale') return 'scale-90 transition-transform duration-[4000ms] ease-in';
+    return 'scale-95 transition-transform duration-[4000ms]';
+  };
+
+  const phaseInstruction = {
+    Inhale: 'Breathe in slowly through your nose...',
+    Hold: 'Gently hold your breath and relax your shoulders...',
+    Exhale: 'Let the air flow out gently through your mouth...',
+    Rest: 'Rest in quiet stillness before the next breath...',
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Friendly Guide Card at Top */}
+      <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-stone-800 flex items-start gap-3">
+        <HelpCircle className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
+        <div className="space-y-0.5">
+          <h4 className="text-sm font-bold text-emerald-950">How this room works:</h4>
+          <p className="text-xs text-emerald-900 leading-relaxed">
+            Sometimes talking is too exhausting. Here, you don't need to speak or type anything. Just watch the glowing circle and match your breath to it. Real people are breathing with you right now.
+          </p>
+        </div>
+      </div>
+
+      {/* Main Header & Audio Controls */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-2 border-b border-stone-200">
+        <div>
+          <span className="text-xs font-semibold uppercase tracking-wider text-emerald-800">
+            Quiet Relaxation Room
+          </span>
+          <h1 className="text-2xl sm:text-3xl font-bold text-stone-900 mt-1">
+            Breathe Together
+          </h1>
+          <p className="text-xs sm:text-sm text-stone-600 mt-1 max-w-2xl">
+            Match your breath with the glowing orb. Tap the button below to send a silent warm hug to others in the room.
+          </p>
+        </div>
+
+        {/* Ambient Audio Controls */}
+        <div className="flex items-center gap-2 self-start md:self-auto p-1.5 bg-stone-100 rounded-xl">
+          <button
+            onClick={() => toggleAudio()}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors ${
+              isPlayingAudio ? 'bg-emerald-800 text-white shadow-xs' : 'text-stone-700 hover:text-stone-900'
+            }`}
+          >
+            {isPlayingAudio ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+            <span>{isPlayingAudio ? 'Calm Music Playing' : 'Turn On Calming Sounds'}</span>
+          </button>
+
+          {isPlayingAudio && (
+            <select
+              value={soundTrack}
+              onChange={(e) => toggleAudio(e.target.value as any)}
+              className="bg-white text-xs text-stone-800 rounded-lg px-2 py-1.5 border border-stone-200 focus:outline-hidden"
+            >
+              <option value="theta_waves">Soothing Waves (Deep Calm)</option>
+              <option value="rain_mist">Gentle Rain Shower</option>
+              <option value="forest_dawn">Morning Forest Birds</option>
+              <option value="singing_bowl_drone">Warm Singing Bowl</option>
+            </select>
+          )}
+        </div>
+      </div>
+
+      {/* Main Breathing Sanctuary Canvas */}
+      <div className="relative w-full h-[460px] sm:h-[500px] rounded-3xl bg-stone-950 text-white overflow-hidden shadow-xl border border-stone-800 flex flex-col items-center justify-between p-6">
+        {/* Subtle Background Glow */}
+        <div className="absolute inset-0 opacity-20 pointer-events-none bg-[radial-gradient(#34d399_1px,transparent_1px)] [background-size:24px_24px]"></div>
+
+        {/* Top Room Bar: Simplified */}
+        <div className="relative z-10 w-full flex flex-wrap items-center justify-between gap-2 text-xs text-stone-300">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span>{souls.length + 1} people breathing together right now</span>
+          </div>
+
+          <div className="flex items-center gap-1.5 p-1 bg-stone-900 rounded-lg border border-stone-800">
+            <span className="text-[11px] text-stone-400 px-1">Breathing Speed:</span>
+            <button
+              onClick={() => setTechnique('box')}
+              className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors ${
+                technique === 'box' ? 'bg-emerald-700 text-white' : 'text-stone-400 hover:text-white'
+              }`}
+            >
+              Easy (4-4-4)
+            </button>
+            <button
+              onClick={() => setTechnique('relax')}
+              className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors ${
+                technique === 'relax' ? 'bg-emerald-700 text-white' : 'text-stone-400 hover:text-white'
+              }`}
+            >
+              Deep Rest (4-7-8)
+            </button>
+          </div>
+        </div>
+
+        {/* People on canvas as gentle glowing dots */}
+        <div className="absolute inset-0 pointer-events-none">
+          {souls.map((soul) => (
+            <div
+              key={soul.id}
+              style={{ left: `${soul.x}%`, top: `${soul.y}%` }}
+              className="absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group pointer-events-auto cursor-default"
+            >
+              <div
+                style={{ backgroundColor: soul.auraColor, boxShadow: `0 0 16px ${soul.auraColor}88` }}
+                className="w-3.5 h-3.5 rounded-full transition-transform hover:scale-150 duration-300"
+              />
+              <span className="text-[10px] text-stone-300 mt-1 opacity-0 group-hover:opacity-100 transition-opacity bg-stone-900/95 px-2 py-0.5 rounded border border-stone-700 whitespace-nowrap">
+                {soul.pseudonym} (breathing with you)
+              </span>
+            </div>
+          ))}
+
+          {/* Dynamic Warmth Messages */}
+          {ripples.map((ripple) => (
+            <div
+              key={ripple.id}
+              style={{ left: `${ripple.x}%`, top: `${ripple.y}%` }}
+              className="absolute transform -translate-x-1/2 -translate-y-1/2 pointer-events-none z-20"
+            >
+              <div className="w-12 h-12 rounded-full border-2 border-emerald-400/80 animate-ping" />
+              <div className="mt-2 text-center">
+                <span className="text-xs font-semibold bg-emerald-900 text-emerald-200 px-3 py-1 rounded-full border border-emerald-500 whitespace-nowrap shadow-lg">
+                  {ripple.senderPseudonym}: {ripple.message}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Central Breathing Circle */}
+        <div className="relative z-10 flex flex-col items-center justify-center my-auto">
+          <div className="relative flex items-center justify-center">
+            {/* Ambient outer aura glow */}
+            <div
+              className={`absolute w-56 h-56 sm:w-64 sm:h-64 rounded-full bg-emerald-500/20 blur-2xl ${getOrbScale()}`}
+            />
+
+            {/* Glowing Orb */}
+            <div
+              className={`relative w-44 h-44 sm:w-52 sm:h-52 rounded-full overflow-hidden border-2 border-emerald-400/40 shadow-2xl flex items-center justify-center ${getOrbScale()}`}
+            >
+              <img
+                src="/src/assets/images/wellness_breathing_circle_1792301075346.jpg"
+                alt="Breathing circle"
+                referrerPolicy="no-referrer"
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-stone-950/40 backdrop-blur-[2px] flex flex-col items-center justify-center text-center p-3">
+                <span className="text-xl sm:text-2xl font-bold tracking-wider text-white uppercase drop-shadow-md">
+                  {breathingPhase}
+                </span>
+                <span className="text-3xl sm:text-4xl font-extrabold text-emerald-300 font-mono tabular-nums drop-shadow-md mt-1">
+                  {phaseSecondsLeft}s
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <p className="text-sm font-semibold text-emerald-200 mt-6 text-center max-w-sm tracking-wide bg-stone-900/70 px-4 py-1.5 rounded-full border border-stone-800">
+            {phaseInstruction[breathingPhase]}
+          </p>
+        </div>
+
+        {/* Bottom Action: 1-Tap Hug */}
+        <div className="relative z-10 w-full flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-stone-800">
+          <div className="text-xs text-stone-400 flex items-center gap-2">
+            <HeartHandshake className="w-4 h-4 text-emerald-400" />
+            <span>{warmthSentCount} warm hugs sent between people in this room today</span>
+          </div>
+
+          <button
+            onClick={handleSendWarmth}
+            className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs sm:text-sm shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2"
+          >
+            <Sparkles className="w-4 h-4 text-emerald-200" />
+            <span>Send a Silent Warm Hug</span>
+          </button>
+        </div>
+      </div>
+
+      {/* 3 Simple Explanatory Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
+        <div className="p-4 rounded-2xl bg-white border border-stone-200 space-y-1">
+          <div className="text-xs font-semibold text-emerald-800 flex items-center gap-1.5">
+            <Wind className="w-4 h-4" />
+            <span>Step 1: Relax Your Body</span>
+          </div>
+          <h4 className="text-sm font-bold text-stone-900">Why deep breathing helps</h4>
+          <p className="text-xs text-stone-600 leading-relaxed">
+            When you take slow breaths with a longer exhale, your brain immediately gets the message that you are safe, lowering racing heartbeats.
+          </p>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-white border border-stone-200 space-y-1">
+          <div className="text-xs font-semibold text-sky-800 flex items-center gap-1.5">
+            <Volume2 className="w-4 h-4" />
+            <span>Step 2: Calming Sounds</span>
+          </div>
+          <h4 className="text-sm font-bold text-stone-900">Gentle Background Audio</h4>
+          <p className="text-xs text-stone-600 leading-relaxed">
+            Use the sound button to play rain or gentle tones. It helps drown out background noise and racing thoughts.
+          </p>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-white border border-stone-200 space-y-1">
+          <div className="text-xs font-semibold text-amber-800 flex items-center gap-1.5">
+            <Compass className="w-4 h-4" />
+            <span>Step 3: No Pressure</span>
+          </div>
+          <h4 className="text-sm font-bold text-stone-900">Zero Expectations</h4>
+          <p className="text-xs text-stone-600 leading-relaxed">
+            Nobody is judging you. You don't have to explain yourself. Even taking just 2 or 3 calm breaths right now is a win.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+import { ShieldAlert } from 'lucide-react';
+
+interface TopNavigationBarProps {
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+  onOpenGrounding: () => void;
+}
+
+export function TopNavigationBar({ activeTab, setActiveTab, onOpenGrounding }: TopNavigationBarProps) {
+  return (
+    <header className="sticky top-0 z-40 bg-stone-50/90 backdrop-blur-md border-b border-stone-200/80">
+      <div className="max-w-7xl mx-auto flex items-center justify-between gap-8 px-4 sm:px-6 py-3.5">
+        {/* Zone 1: Single text element wordmark */}
+        <button
+          onClick={() => setActiveTab('feed')}
+          className="text-lg font-bold tracking-tight text-stone-900 whitespace-nowrap shrink-0 hover:opacity-90 transition-opacity flex items-center gap-2"
+        >
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 inline-block"></span>
+          <span>Haven Mind</span>
+        </button>
+
+        {/* Zone 2: 4-5 clean single-line text navigation links */}
+        <nav className="hidden md:flex items-center gap-7 text-sm font-medium text-stone-600">
+          <button
+            onClick={() => setActiveTab('feed')}
+            className={`transition-colors whitespace-nowrap shrink-0 pb-0.5 ${
+              activeTab === 'feed'
+                ? 'text-stone-900 border-b-2 border-emerald-700 font-semibold'
+                : 'hover:text-stone-900'
+            }`}
+          >
+            Stories & Community
+          </button>
+
+          <button
+            onClick={() => setActiveTab('presence')}
+            className={`transition-colors whitespace-nowrap shrink-0 pb-0.5 ${
+              activeTab === 'presence'
+                ? 'text-stone-900 border-b-2 border-emerald-700 font-semibold'
+                : 'hover:text-stone-900'
+            }`}
+          >
+            Breathe Together
+          </button>
+
+          <button
+            onClick={() => setActiveTab('vault')}
+            className={`transition-colors whitespace-nowrap shrink-0 pb-0.5 ${
+              activeTab === 'vault'
+                ? 'text-stone-900 border-b-2 border-emerald-700 font-semibold'
+                : 'hover:text-stone-900'
+            }`}
+          >
+            Private Venting
+          </button>
+
+          <button
+            onClick={() => setActiveTab('pebbles')}
+            className={`transition-colors whitespace-nowrap shrink-0 pb-0.5 ${
+              activeTab === 'pebbles'
+                ? 'text-stone-900 border-b-2 border-emerald-700 font-semibold'
+                : 'hover:text-stone-900'
+            }`}
+          >
+            Kindness Cards
+          </button>
+
+          <button
+            onClick={() => setActiveTab('flutter')}
+            className={`transition-colors whitespace-nowrap shrink-0 pb-0.5 ${
+              activeTab === 'flutter'
+                ? 'text-stone-900 border-b-2 border-emerald-700 font-semibold'
+                : 'hover:text-stone-900'
+            }`}
+          >
+            Pure Flutter (Dart)
+          </button>
+        </nav>
+
+        {/* Zone 3: 1 primary action */}
+        <div className="flex items-center gap-3 shrink-0">
+          <button
+            onClick={onOpenGrounding}
+            className="px-3.5 py-1.5 text-xs font-semibold text-rose-950 bg-rose-100 hover:bg-rose-200 border border-rose-300 rounded-lg transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 shadow-xs"
+          >
+            <ShieldAlert className="w-3.5 h-3.5 text-rose-800" />
+            <span>Need Help? Calm Down</span>
+          </button>
+        </div>
+      </div>
+    </header>
+  );
+}
+import { useState } from 'react';
+import { Feather, Flame, Sparkles, Check, ArrowRight, ShieldCheck, Heart, HelpCircle, RefreshCw } from 'lucide-react';
+import { analyzeVentThought } from '../services/reframerService';
+import { soundEngine } from '../services/soundEngine';
+import { CognitiveDistortionMatch, PostIntent } from '../types';
+
+interface VentVaultProps {
+  onPublishToFeed: (postData: {
+    title: string;
+    content: string;
+    intent: PostIntent;
+    isSensitive: boolean;
+  }) => void;
+}
+
+export function VentVault({ onPublishToFeed }: VentVaultProps) {
+  const [ventText, setVentText] = useState<string>('');
+  const [distressIntensity, setDistressIntensity] = useState<number>(6);
+  const [analysis, setAnalysis] = useState<{
+    distortions: CognitiveDistortionMatch[];
+    reframeSummary: string;
+  } | null>(null);
+  const [isDissolving, setIsDissolving] = useState<boolean>(false);
+  const [hasDissolved, setHasDissolved] = useState<boolean>(false);
+  const [selectedIntent, setSelectedIntent] = useState<PostIntent>('Needs Gentle Listening');
+  const [markSensitive, setMarkSensitive] = useState<boolean>(false);
+  const [publishSuccess, setPublishSuccess] = useState<boolean>(false);
+
+  const handleAnalyze = () => {
+    if (!ventText.trim()) return;
+    const result = analyzeVentThought(ventText);
+    setAnalysis(result);
+    soundEngine.playSingingBowl(480, 2);
+  };
+
+  const handleDissolve = () => {
+    if (!ventText.trim()) return;
+    setIsDissolving(true);
+    soundEngine.playSingingBowl(380, 3.5);
+
+    setTimeout(() => {
+      setVentText('');
+      setAnalysis(null);
+      setIsDissolving(false);
+      setHasDissolved(true);
+      setTimeout(() => setHasDissolved(false), 5000);
+    }, 1800);
+  };
+
+  const handlePublish = () => {
+    if (!ventText.trim()) return;
+    onPublishToFeed({
+      title: 'Anonymous Vent',
+      content: ventText.trim(),
+      intent: selectedIntent,
+      isSensitive: markSensitive || distressIntensity >= 8,
+    });
+    setPublishSuccess(true);
+    soundEngine.playPebbleDrop();
+    setVentText('');
+    setAnalysis(null);
+    setTimeout(() => setPublishSuccess(false), 4000);
+  };
+
+  const quickPrompts = [
+    'I feel like I am failing at everything and letting people down...',
+    'Everything feels completely overwhelming and I cannot handle tomorrow...',
+    'I feel like I should have achieved so much more by now...',
+  ];
+
+  return (
+    <div className="space-y-6">
+      {/* Friendly Guide Card at Top */}
+      <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-stone-800 flex items-start gap-3">
+        <HelpCircle className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
+        <div className="space-y-1">
+          <h4 className="text-sm font-bold text-amber-950">How Private Venting works:</h4>
+          <p className="text-xs text-amber-900 leading-relaxed">
+            Write down whatever is bothering you—it is completely private on your device. Then choose:
+          </p>
+          <ul className="text-xs text-amber-950/90 list-disc list-inside space-y-0.5">
+            <li><strong>Burn & Let Go:</strong> Watches your words disappear into smoke with a calm chime so you feel lighter.</li>
+            <li><strong>Untangle Thoughts:</strong> Gives you gentle advice showing how your stressed brain might be tricking you.</li>
+            <li><strong>Share Anonymously:</strong> Send it to the community if you want friendly people to listen to you.</li>
+          </ul>
+        </div>
+      </div>
+
+      {/* Header */}
+      <div className="pb-2 border-b border-stone-200">
+        <span className="text-xs font-semibold uppercase tracking-wider text-emerald-800">
+          Private Journaling & Relief
+        </span>
+        <h1 className="text-2xl sm:text-3xl font-bold text-stone-900 mt-1">
+          Private Venting & Thought Untangler
+        </h1>
+        <p className="text-xs sm:text-sm text-stone-600 mt-1 max-w-2xl">
+          Get heavy thoughts out of your head without fear of judgment. Nothing is ever saved unless you choose to share.
+        </p>
+      </div>
+
+      {/* Success Notifications */}
+      {hasDissolved && (
+        <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 flex items-center gap-3 animate-in fade-in">
+          <Sparkles className="w-5 h-5 text-emerald-700 shrink-0" />
+          <p className="text-xs sm:text-sm font-medium">
+            Your words are completely gone. Take a deep, gentle breath and let your shoulders drop. You are safe.
+          </p>
+        </div>
+      )}
+
+      {publishSuccess && (
+        <div className="p-4 rounded-2xl bg-teal-50 border border-teal-200 text-teal-900 flex items-center gap-3 animate-in fade-in">
+          <Check className="w-5 h-5 text-teal-700 shrink-0" />
+          <p className="text-xs sm:text-sm font-medium">
+            Posted anonymously to Stories & Community. Others can now send you support.
+          </p>
+        </div>
+      )}
+
+      {/* Writing Box */}
+      <div className="p-6 rounded-3xl bg-white border border-stone-200 shadow-xs space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Feather className="w-4 h-4 text-emerald-700" />
+            <span className="text-sm font-bold text-stone-900">Step 1: Write What's on Your Mind</span>
+            <span className="text-xs text-emerald-700 font-medium">· 100% Private</span>
+          </div>
+
+          {/* Distress intensity slider */}
+          <div className="flex items-center gap-2 bg-stone-50 px-3 py-1.5 rounded-xl border border-stone-200">
+            <span className="text-xs text-stone-600 font-medium">How heavy does it feel?</span>
+            <input
+              type="range"
+              min="1"
+              max="10"
+              value={distressIntensity}
+              onChange={(e) => setDistressIntensity(Number(e.target.value))}
+              className="w-24 accent-emerald-700 cursor-pointer"
+            />
+            <span className="text-xs font-mono font-bold text-stone-800 tabular-nums">
+              {distressIntensity}/10
+            </span>
+          </div>
+        </div>
+
+        {/* Text Area with Dissolve Animation */}
+        <div className="relative">
+          <textarea
+            value={ventText}
+            onChange={(e) => {
+              setVentText(e.target.value);
+              if (analysis) setAnalysis(null);
+            }}
+            placeholder="Type what is bothering you right now... (Example: 'I feel completely stuck and I don't know what to do next...')"
+            rows={5}
+            className={`w-full p-4 rounded-2xl border border-stone-200 text-stone-800 text-sm leading-relaxed placeholder:text-stone-400 focus:outline-hidden focus:ring-2 focus:ring-emerald-700/20 focus:border-emerald-700 transition-all ${
+              isDissolving ? 'opacity-0 scale-95 blur-sm filter transition-all duration-1000' : 'opacity-100'
+            }`}
+          />
+
+          {isDissolving && (
+            <div className="absolute inset-0 flex items-center justify-center bg-stone-900/10 backdrop-blur-xs rounded-2xl pointer-events-none">
+              <span className="text-xs font-semibold text-stone-700 flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-emerald-600 animate-spin" />
+                <span>Burning away your worry into smoke...</span>
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Quick Example Prompts */}
+        {!ventText && (
+          <div className="space-y-1.5">
+            <span className="text-xs text-stone-500">Not sure what to write? Click an example to test:</span>
+            <div className="flex flex-wrap gap-2">
+              {quickPrompts.map((qp, i) => (
+                <button
+                  key={i}
+                  onClick={() => setVentText(qp)}
+                  className="text-xs text-stone-700 hover:text-stone-950 bg-stone-100 hover:bg-stone-200 px-3 py-1.5 rounded-lg transition-colors text-left"
+                >
+                  "{qp}"
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Big Action Buttons */}
+        <div className="pt-3 border-t border-stone-100 flex flex-wrap items-center justify-between gap-3">
+          <button
+            onClick={handleDissolve}
+            disabled={!ventText.trim() || isDissolving}
+            className="px-4 py-2.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-800 text-xs font-semibold transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
+          >
+            <Flame className="w-4 h-4 text-rose-600" />
+            <span>Option A: Burn & Disappear (Erase Forever)</span>
+          </button>
+
+          <button
+            onClick={handleAnalyze}
+            disabled={!ventText.trim() || isDissolving}
+            className="px-5 py-2.5 rounded-xl bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-semibold transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 shadow-sm"
+          >
+            <Sparkles className="w-4 h-4 text-emerald-300" />
+            <span>Option B: Untangle Thoughts (Get Kind Advice)</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Results Box */}
+      {analysis && (
+        <div className="p-6 rounded-3xl bg-emerald-50/70 border border-emerald-200 space-y-5 animate-in fade-in">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-emerald-800" />
+              <h3 className="text-base font-bold text-stone-900">Gentle Advice & New Perspective</h3>
+            </div>
+            <span className="text-xs text-emerald-900 font-semibold bg-emerald-100 px-2.5 py-1 rounded-full">
+              {analysis.distortions.length === 0
+                ? 'Healthy thinking'
+                : `${analysis.distortions.length} common mental trap${analysis.distortions.length > 1 ? 's' : ''} spotted`}
+            </span>
+          </div>
+
+          {/* Core Reframe */}
+          <div className="p-4 rounded-2xl bg-white border border-emerald-200 shadow-xs space-y-1">
+            <div className="text-xs font-bold text-emerald-800 uppercase tracking-wider">
+              A kinder way to look at this:
+            </div>
+            <p className="text-sm text-stone-800 leading-relaxed font-medium">
+              {analysis.reframeSummary}
+            </p>
+          </div>
+
+          {/* Traps Breakdown */}
+          {analysis.distortions.length > 0 && (
+            <div className="space-y-2">
+              <span className="text-xs font-bold text-stone-700">
+                What your anxiety might be doing:
+              </span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {analysis.distortions.map((d, idx) => (
+                  <div
+                    key={idx}
+                    className="p-3.5 rounded-xl bg-white border border-emerald-100 space-y-1.5"
+                  >
+                    <div className="text-xs font-bold text-stone-900">
+                      Trap: {d.name}
+                    </div>
+                    <p className="text-xs text-stone-600">{d.explanation}</p>
+                    <div className="p-2.5 rounded-lg bg-emerald-50/80 text-xs text-emerald-950 leading-relaxed font-medium">
+                      💡 <strong>Friendly reminder:</strong> {d.gentleReframe}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Optional Sharing */}
+          <div className="pt-4 border-t border-emerald-200 space-y-3">
+            <div>
+              <h4 className="text-sm font-bold text-stone-900">
+                Option C: Share with others anonymously?
+              </h4>
+              <p className="text-xs text-stone-600">
+                If you want other people to read this and send you friendly support, choose what kind of help you want:
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <label className="text-xs font-medium text-stone-700 flex flex-col gap-1">
+                <span>Tell commenters what you need:</span>
+                <select
+                  value={selectedIntent}
+                  onChange={(e) => setSelectedIntent(e.target.value as PostIntent)}
+                  className="bg-white border border-stone-300 rounded-xl px-3 py-2 text-xs text-stone-800 focus:outline-hidden"
+                >
+                  <option value="Needs Gentle Listening">I just need someone to listen (no advice please)</option>
+                  <option value="Validation Only - No Advice">Validation only — please don't try to fix me</option>
+                  <option value="Solution-Oriented Advice Welcome">I would love advice or tips</option>
+                  <option value="Burnout / Heavy Vent">Heavy vent (needs extra gentle care)</option>
+                </select>
+              </label>
+
+              <label className="text-xs font-medium text-stone-700 flex flex-col justify-end">
+                <div className="flex items-center gap-2 p-2 bg-white rounded-xl border border-stone-300 h-9">
+                  <input
+                    type="checkbox"
+                    id="triggerWarning"
+                    checked={markSensitive}
+                    onChange={(e) => setMarkSensitive(e.target.checked)}
+                    className="accent-emerald-700 rounded cursor-pointer"
+                  />
+                  <span className="text-xs text-stone-700">Add warning label (if very heavy topic)</span>
+                </div>
+              </label>
+            </div>
+
+            <button
+              onClick={handlePublish}
+              className="w-full py-2.5 rounded-xl bg-emerald-800 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm transition-all shadow-sm flex items-center justify-center gap-2 active:scale-98"
+            >
+              <span>Post to Community Anonymously</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
