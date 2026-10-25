@@ -1,0 +1,950 @@
+import 'package:flutter/material.dart';
+
+class BreatheScreen extends StatefulWidget {
+  const BreatheScreen({super.key});
+
+  @override
+  State<BreatheScreen> createState() => _BreatheScreenState();
+}
+
+class _BreatheScreenState extends State<BreatheScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+  String _phaseName = 'Inhale';
+  String _phaseHint = 'Breathe in slowly through your nose...';
+  int _secondsRemaining = 4;
+  int _hugsSentCount = 142;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 16),
+    )..repeat();
+
+    _scaleAnimation = TweenSequence<double>([
+      // Inhale: 4s
+      TweenSequenceItem(
+        tween: Tween(begin: 0.85, end: 1.25)
+            .chain(CurveTween(curve: Curves.easeOutCubic)),
+        weight: 25,
+      ),
+      // Hold: 4s
+      TweenSequenceItem(
+        tween: ConstantTween(1.25),
+        weight: 25,
+      ),
+      // Exhale: 4s
+      TweenSequenceItem(
+        tween: Tween(begin: 1.25, end: 0.85)
+            .chain(CurveTween(curve: Curves.easeInOutCubic)),
+        weight: 25,
+      ),
+      // Rest: 4s
+      TweenSequenceItem(
+        tween: ConstantTween(0.85),
+        weight: 25,
+      ),
+    ]).animate(_controller);
+
+    _controller.addListener(() {
+      final value = _controller.value;
+      String nextPhase;
+      String nextHint;
+      if (value < 0.25) {
+        nextPhase = 'Inhale';
+        nextHint = 'Breathe in slowly through your nose...';
+      } else if (value < 0.50) {
+        nextPhase = 'Hold';
+        nextHint = 'Gently hold and soften your shoulders...';
+      } else if (value < 0.75) {
+        nextPhase = 'Exhale';
+        nextHint = 'Release the breath smoothly through your mouth...';
+      } else {
+        nextPhase = 'Rest';
+        nextHint = 'Rest in stillness before the next breath...';
+      }
+
+      final sec = 4 - ((value * 16).toInt() % 4);
+      if (nextPhase != _phaseName || sec != _secondsRemaining) {
+        setState(() {
+          _phaseName = nextPhase;
+          _phaseHint = nextHint;
+          _secondsRemaining = sec;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _sendSilentHug() {
+    setState(() {
+      _hugsSentCount++;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('✨ Warm hug sent to everyone breathing with you right now!'),
+        behavior: SnackBarBehavior.floating,
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF0C100E),
+      appBar: AppBar(
+        title: const Text('Breathe Together', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.music_note, color: Colors.white70),
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Playing calming rain and 432Hz ambient soundscape')),
+              );
+            },
+          ),
+        ],
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // How it works banner
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.pad(BorderSide(color: Colors.white.withOpacity(0.1))),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.info_outline, color: Color(0xFF34D399), size: 20),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'No typing, no cameras. Just watch the circle expand and breathe along. Real people are breathing with you.',
+                      style: TextStyle(color: Colors.white70, fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const Spacer(),
+
+            // Central Animated Breathing Orb
+            ScaleTransition(
+              scale: _scaleAnimation,
+              child: Container(
+                width: 220,
+                height: 220,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: const RadialGradient(
+                    colors: [
+                      Color(0xFF34D399),
+                      Color(0xFF059669),
+                      Color(0xFF064E3B),
+                    ],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF10B981).withOpacity(0.35),
+                      blurRadius: 40,
+                      spreadRadius: 8,
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        _phaseName.toUpperCase(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 2,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${_secondsRemaining}s',
+                        style: const TextStyle(
+                          color: Color(0xFFA7F3D0),
+                          fontSize: 32,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 32),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Text(
+                _phaseHint,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+
+            const Spacer(),
+
+            // Bottom Action
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  Text(
+                    '$_hugsSentCount quiet hugs shared in this room today',
+                    style: const TextStyle(color: Colors.white54, fontSize: 12),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: FilledButton.icon(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: const Color(0xFF059669),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      onPressed: _sendSilentHug,
+                      icon: const Icon(Icons.favorite),
+                      label: const Text(
+                        'Send a Silent Warm Hug (1-Tap)',
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../models/wellness_models.dart';
+import '../providers/wellness_providers.dart';
+
+class CommunityScreen extends ConsumerWidget {
+  const CommunityScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final posts = ref.watch(communityPostsProvider);
+    final bandwidth = ref.watch(emotionalBandwidthProvider);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Stories & Community', style: TextStyle(fontWeight: FontWeight.bold)),
+        elevation: 0,
+        actions: [
+          TextButton.icon(
+            onPressed: () {
+              ref.read(emotionalBandwidthProvider.notifier).state =
+                  bandwidth == EmotionalBandwidth.gentle
+                      ? EmotionalBandwidth.balanced
+                      : EmotionalBandwidth.gentle;
+            },
+            icon: Icon(
+              bandwidth == EmotionalBandwidth.gentle ? Icons.shield : Icons.shield_outlined,
+              color: const Color(0xFF2D6A4F),
+            ),
+            label: Text(
+              bandwidth == EmotionalBandwidth.gentle ? 'Gentle Mode: ON' : 'Gentle Mode: OFF',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+            ),
+          ),
+        ],
+      ),
+      body: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: posts.length + 1,
+        itemBuilder: (context, index) {
+          if (index == 0) {
+            return Card(
+              color: const Color(0xFFECFDF5),
+              margin: const EdgeInsets.only(bottom: 16),
+              child: const Padding(
+                padding: EdgeInsets.all(14),
+                child: Text(
+                  'Every story tells you upfront what the author needs (e.g. "Just Listening" or "Advice Welcome") so you always know how to respond kindly.',
+                  style: TextStyle(fontSize: 12, color: Color(0xFF065F46)),
+                ),
+              ),
+            );
+          }
+
+          final post = posts[index - 1];
+          final isShielded = post.isSensitive && bandwidth == EmotionalBandwidth.gentle;
+
+          return Card(
+            margin: const EdgeInsets.only(bottom: 16),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(post.authorName, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      Text(post.timeAgo, style: const TextStyle(fontSize: 12, color: Colors.black45)),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE5E7EB),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'Needs: ${post.intent.label}',
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(post.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+
+                  if (isShielded)
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFEF3C7),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        children: [
+                          const Icon(Icons.shield, color: Color(0xFFB45309)),
+                          const SizedBox(height: 6),
+                          const Text('Hidden in Gentle Mode (Heavy Topic)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                          const SizedBox(height: 4),
+                          Text(post.sensitiveNotice ?? '', style: const TextStyle(fontSize: 11, color: Color(0xFF78350F))),
+                        ],
+                      ),
+                    )
+                  else
+                    Text(post.content, style: const TextStyle(fontSize: 14, height: 1.4)),
+
+                  const SizedBox(height: 16),
+                  const Divider(height: 1),
+                  const SizedBox(height: 10),
+
+                  // Reaction Buttons
+                  Row(
+                    children: [
+                      TextButton.icon(
+                        onPressed: () => ref.read(communityPostsProvider.notifier).react(post.id, 'holdingSpace'),
+                        icon: const Icon(Icons.volunteer_activism, size: 16),
+                        label: Text('With You (${post.holdingSpaceCount})', style: const TextStyle(fontSize: 11)),
+                      ),
+                      TextButton.icon(
+                        onPressed: () => ref.read(communityPostsProvider.notifier).react(post.id, 'gentleHug'),
+                        icon: const Icon(Icons.favorite, size: 16),
+                        label: Text('Hug (${post.gentleHugCount})', style: const TextStyle(fontSize: 11)),
+                      ),
+                      TextButton.icon(
+                        onPressed: () => ref.read(communityPostsProvider.notifier).react(post.id, 'iHearYou'),
+                        icon: const Icon(Icons.hearing, size: 16),
+                        label: Text('Hear You (${post.iHearYouCount})', style: const TextStyle(fontSize: 11)),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: const Color(0xFF2D6A4F),
+        onPressed: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Sharing modal opened')),
+          );
+        },
+        icon: const Icon(Icons.edit, color: Colors.white),
+        label: const Text('Share Story', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+      ),
+    );
+  }
+}
+import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+class GroundingModal extends StatefulWidget {
+  const GroundingModal({super.key});
+
+  @override
+  State<GroundingModal> createState() => _GroundingModalState();
+}
+
+class _GroundingModalState extends State<GroundingModal> {
+  int _step = 0;
+
+  final steps = [
+    {
+      'count': '5',
+      'sense': 'SEE',
+      'prompt': 'Acknowledge 5 things you can see around you.',
+      'hint': 'A shadow, a texture on your desk, a color, light coming through a window.',
+      'color': Colors.emerald,
+    },
+    {
+      'count': '4',
+      'sense': 'TOUCH',
+      'prompt': 'Acknowledge 4 things you can physically feel.',
+      'hint': 'Your feet on the ground, fabric of your shirt, cool air on your skin.',
+      'color': Colors.amber,
+    },
+    {
+      'count': '3',
+      'sense': 'HEAR',
+      'prompt': 'Acknowledge 3 things you can hear right now.',
+      'hint': 'Traffic, hum of a refrigerator, sound of your own steady breath.',
+      'color': Colors.blue,
+    },
+    {
+      'count': '2',
+      'sense': 'SMELL',
+      'prompt': 'Acknowledge 2 things you can smell or enjoy.',
+      'hint': 'Coffee, soap, or imagine the fresh scent of pine in a forest.',
+      'color': Colors.purple,
+    },
+    {
+      'count': '1',
+      'sense': 'TASTE',
+      'prompt': 'Acknowledge 1 thing you can taste, or sip cool water.',
+      'hint': 'Swallow saliva, relax your jaw, and let your tongue rest on the roof of your mouth.',
+      'color': Colors.rose,
+    },
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final current = steps[_step];
+
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Calm Down (5-4-3-2-1)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+            const Divider(),
+            const SizedBox(height: 10),
+            Text('Step ${_step + 1} of 5: Find ${current['count']} things you ${current['sense']}',
+                style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2D6A4F))),
+            const SizedBox(height: 8),
+            Text(current['prompt'] as String, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 6),
+            Text(current['hint'] as String, style: const TextStyle(fontSize: 13, color: Colors.black54)),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                style: FilledButton.styleFrom(backgroundColor: const Color(0xFF2D6A4F)),
+                onPressed: () {
+                  if (_step < 4) {
+                    setState(() => _step++);
+                  } else {
+                    Navigator.pop(context);
+                  }
+                },
+                child: Text(_step == 4 ? 'Finish & Return' : 'I Found These · Next Step'),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.phone, color: Colors.red, size: 18),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text('Free 24/7 Crisis Hotline: Call or Text 988',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.red)),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+import 'package:flutter/material.dart';
+import 'breathe_screen.dart';
+import 'vent_vault_screen.dart';
+import 'community_screen.dart';
+import 'kindness_screen.dart';
+import 'grounding_modal.dart';
+
+class HomeShellScreen extends StatefulWidget {
+  const HomeShellScreen({super.key});
+
+  @override
+  State<HomeShellScreen> createState() => _HomeShellScreenState();
+}
+
+class _HomeShellScreenState extends State<HomeShellScreen> {
+  int _currentIndex = 0;
+
+  final _screens = const [
+    CommunityScreen(),
+    BreatheScreen(),
+    VentVaultScreen(),
+    KindnessScreen(),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: _screens[_currentIndex],
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _currentIndex,
+        onDestinationSelected: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        destinations: const [
+          NavigationDestination(icon: Icon(Icons.forum_outlined), selectedIcon: Icon(Icons.forum), label: 'Stories'),
+          NavigationDestination(icon: Icon(Icons.air_outlined), selectedIcon: Icon(Icons.air), label: 'Breathe'),
+          NavigationDestination(icon: Icon(Icons.edit_note_outlined), selectedIcon: Icon(Icons.edit_note), label: 'Vent'),
+          NavigationDestination(icon: Icon(Icons.favorite_border), selectedIcon: Icon(Icons.favorite), label: 'Kindness'),
+        ],
+      ),
+      floatingActionButton: _currentIndex == 1 ? null : FloatingActionButton.small(
+        backgroundColor: Colors.red.shade100,
+        foregroundColor: Colors.red.shade900,
+        onPressed: () {
+          showDialog(context: context, builder: (_) => const GroundingModal());
+        },
+        child: const Icon(Icons.healing),
+      ),
+    );
+  }
+}
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/wellness_providers.dart';
+
+class KindnessScreen extends ConsumerStatefulWidget {
+  const KindnessScreen({super.key});
+
+  @override
+  ConsumerState<KindnessScreen> createState() => _KindnessScreenState();
+}
+
+class _KindnessScreenState extends ConsumerState<KindnessScreen> {
+  final _noteController = TextEditingController();
+  int _selectedBeaconIndex = 0;
+
+  void _sendNote() {
+    if (_noteController.text.trim().isEmpty) return;
+
+    final beacons = ref.read(kindnessBeaconsProvider);
+    final target = beacons[_selectedBeaconIndex];
+
+    target.notes.insert(0, _noteController.text.trim());
+    ref.read(kindnessBeaconsProvider.notifier).state = [...beacons];
+
+    _noteController.clear();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('💌 Kind note sent! Thank you for spreading warmth.')),
+    );
+  }
+
+  @override
+  void dispose() {
+    _noteController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final beacons = ref.watch(kindnessBeaconsProvider);
+    final current = beacons[_selectedBeaconIndex];
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Kindness Cards'),
+        elevation: 0,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Card(
+              color: const Color(0xFFFEF3C7),
+              child: const Padding(
+                padding: EdgeInsets.all(14),
+                child: Text(
+                  'Write a quick 1-sentence note to someone who is having a rough day, or tap "Ask for Encouragement" when you need a boost.',
+                  style: TextStyle(fontSize: 12, color: Color(0xFF78350F)),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            const Text('People Asking for Kindness:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            const SizedBox(height: 10),
+
+            SizedBox(
+              height: 110,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: beacons.length,
+                itemBuilder: (context, idx) {
+                  final b = beacons[idx];
+                  final isSelected = idx == _selectedBeaconIndex;
+                  return GestureDetector(
+                    onTap: () => setState(() => _selectedBeaconIndex = idx),
+                    child: Container(
+                      width: 240,
+                      margin: const EdgeInsets.only(right: 12),
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: isSelected ? const Color(0xFFECFDF5) : Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: isSelected ? const Color(0xFF2D6A4F) : const Color(0xFFE5E7EB),
+                          width: isSelected ? 2 : 1,
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(b.requesterName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                          const SizedBox(height: 4),
+                          Text(b.prompt, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12)),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            const SizedBox(height: 20),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Send a Note to ${current.requesterName}:', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 6),
+                    Text('"${current.prompt}"', style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 13)),
+                    const SizedBox(height: 14),
+                    TextField(
+                      controller: _noteController,
+                      maxLength: 140,
+                      maxLines: 2,
+                      decoration: InputDecoration(
+                        hintText: 'Write a warm, comforting sentence...',
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        style: FilledButton.styleFrom(backgroundColor: const Color(0xFF2D6A4F)),
+                        onPressed: _sendNote,
+                        icon: const Icon(Icons.send),
+                        label: const Text('Send Encouragement'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+            const Text('Notes Received so far:', style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            for (final note in current.notes)
+              Card(
+                color: const Color(0xFFF3F4F6),
+                margin: const EdgeInsets.only(bottom: 8),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Text('💌 "$note"', style: const TextStyle(fontSize: 13)),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+import 'package:flutter/material.dart';
+import '../services/cognitive_reframer_service.dart';
+import '../models/wellness_models.dart';
+
+class VentVaultScreen extends StatefulWidget {
+  const VentVaultScreen({super.key});
+
+  @override
+  State<VentVaultScreen> createState() => _VentVaultScreenState();
+}
+
+class _VentVaultScreenState extends State<VentVaultScreen> {
+  final _textController = TextEditingController();
+  double _distressWeight = 6;
+  List<DistortionResult>? _detectedTraps;
+  bool _isDissolving = false;
+
+  void _burnAndDisappear() async {
+    if (_textController.text.trim().isEmpty) return;
+
+    setState(() {
+      _isDissolving = true;
+    });
+
+    await Future.delayed(const Duration(milliseconds: 1400));
+
+    setState(() {
+      _textController.clear();
+      _detectedTraps = null;
+      _isDissolving = false;
+    });
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('✨ Your words have burned into smoke. Nothing was saved or stored.'),
+          backgroundColor: Color(0xFF1B4332),
+        ),
+      );
+    }
+  }
+
+  void _untangleThoughts() {
+    if (_textController.text.trim().isEmpty) return;
+    final results = CognitiveReframerService.analyzeThought(_textController.text);
+    setState(() {
+      _detectedTraps = results;
+    });
+  }
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Private Venting'),
+        elevation: 0,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Explanatory card
+            Card(
+              color: const Color(0xFFFEF3C7),
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Icon(Icons.info_outline, color: Color(0xFFB45309)),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Write down whatever is bothering you in total privacy. You can burn it into smoke so it leaves your mind, or tap "Untangle Thoughts" for kind perspective.',
+                        style: TextStyle(fontSize: 12, color: Color(0xFF78350F)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Emotional weight slider
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('How heavy does this feel?', style: TextStyle(fontWeight: FontWeight.w600)),
+                        Text('${_distressWeight.toInt()}/10', style: const TextStyle(fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                    Slider(
+                      value: _distressWeight,
+                      min: 1,
+                      max: 10,
+                      divisions: 9,
+                      activeColor: const Color(0xFF2D6A4F),
+                      onChanged: (val) => setState(() => _distressWeight = val),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Text Input Box
+            AnimatedOpacity(
+              opacity: _isDissolving ? 0.0 : 1.0,
+              duration: const Duration(milliseconds: 1000),
+              child: TextField(
+                controller: _textController,
+                maxLines: 6,
+                decoration: InputDecoration(
+                  hintText: 'Type your raw feelings here... (e.g. "I feel completely overwhelmed and I messed up...")',
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Action Buttons
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.red.shade800,
+                      side: BorderSide(color: Colors.red.shade200),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    onPressed: _burnAndDisappear,
+                    icon: const Icon(Icons.local_fire_department),
+                    label: const Text('Burn & Let Go', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF2D6A4F),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    onPressed: _untangleThoughts,
+                    icon: const Icon(Icons.auto_awesome),
+                    label: const Text('Untangle Thoughts', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ],
+            ),
+
+            // Advice Results
+            if (_detectedTraps != null) ...[
+              const SizedBox(height: 24),
+              const Text('A Kinder Way to Look at This:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 10),
+              if (_detectedTraps!.isEmpty)
+                Card(
+                  color: const Color(0xFFECFDF5),
+                  child: const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Text('Your feelings make sense. Take a slow breath; you are doing your best with what you have today.'),
+                  ),
+                )
+              else
+                for (final trap in _detectedTraps!)
+                  Card(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.psychology, color: Color(0xFF2D6A4F), size: 20),
+                              const SizedBox(width: 8),
+                              Text(trap.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Text(trap.explanation, style: const TextStyle(fontSize: 12, color: Colors.black54)),
+                          const SizedBox(height: 10),
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFECFDF5),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text('💡 ${trap.gentleReframe}', style: const TextStyle(fontSize: 13, color: Color(0xFF065F46))),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
