@@ -1,0 +1,219 @@
+import { CommunityPost, KindnessBeacon, SilentPresenceSoul } from '../types';
+
+export const INITIAL_POSTS: CommunityPost[] = [
+  {
+    id: 'post-1',
+    author: {
+      id: 'usr-1',
+      pseudonym: 'WillowBreeze',
+      auraGradient: 'from-emerald-400 to-teal-500',
+      auraLabel: 'Calm Sage',
+      avatarIcon: 'leaf',
+    },
+    title: 'Surviving a panic surge at work today without running away',
+    content:
+      'My heart began pounding during the team review and my vision tunneled. In the past, I would have locked myself in the bathroom and cried in shame. Today, I remembered the 4-count exhale and tapped my feet gently against the hardwood. I stayed. It was shaky, but I stayed.',
+    intent: 'Celebrating Small Win',
+    createdAt: '2026-10-17T19:30:00Z',
+    timeAgo: '45 mins ago',
+    isSensitive: false,
+    reactions: {
+      holdingSpace: 34,
+      gentleHug: 52,
+      iHearYou: 29,
+      inspired: 41,
+    },
+    pinnedKindnessQuote: 'Courage is not the absence of fear, but breathing through the trembling.',
+    comments: [
+      {
+        id: 'c-1',
+        author: {
+          id: 'usr-2',
+          pseudonym: 'QuietRiver',
+          auraGradient: 'from-sky-400 to-indigo-500',
+          auraLabel: 'Deep Cyan',
+          avatarIcon: 'waves',
+        },
+        content:
+          'Staying in the room while your body says run is one of the most heroic invisible battles in the world. Deeply proud of you.',
+        createdAt: '30 mins ago',
+        intentBadge: 'Soft Validation',
+      },
+      {
+        id: 'c-2',
+        author: {
+          id: 'usr-3',
+          pseudonym: 'AmberFern',
+          auraGradient: 'from-amber-400 to-orange-500',
+          auraLabel: 'Warm Amber',
+          avatarIcon: 'sun',
+        },
+        content:
+          'I needed this reminder today. Felt the same dread this morning. Thank you for anchoring us.',
+        createdAt: '18 mins ago',
+        intentBadge: 'Shared Experience',
+      },
+    ],
+  },
+  {
+    id: 'post-2',
+    author: {
+      id: 'usr-4',
+      pseudonym: 'MistyHaven',
+      auraGradient: 'from-purple-400 to-indigo-500',
+      auraLabel: 'Twilight Violet',
+      avatarIcon: 'moon',
+    },
+    title: 'Exhausted by constant masking. Just need to be heard, no solutions please.',
+    content:
+      'I have spent 40 hours this week pretending to be upbeat, cheerful, and untroubled for my family and coworkers. My emotional battery is at 2%. When people jump in with "have you tried yoga" or "drink water", it makes me feel even more broken. I just need someone to say: it makes sense that you are tired.',
+    intent: 'Validation Only - No Advice',
+    createdAt: '2026-10-17T17:15:00Z',
+    timeAgo: '2 hours ago',
+    isSensitive: false,
+    reactions: {
+      holdingSpace: 89,
+      gentleHug: 114,
+      iHearYou: 95,
+      inspired: 12,
+    },
+    comments: [
+      {
+        id: 'c-3',
+        author: {
+          id: 'usr-5',
+          pseudonym: 'SilverPines',
+          auraGradient: 'from-stone-400 to-zinc-600',
+          auraLabel: 'Silver Slate',
+          avatarIcon: 'feather',
+        },
+        content:
+          'It makes total and complete sense that you are bone-tired. Masking takes tremendous neurological energy. No tips, just holding space for your weariness.',
+        createdAt: '1 hour ago',
+        intentBadge: 'Soft Validation',
+      },
+      {
+        id: 'c-4',
+        author: {
+          id: 'usr-6',
+          pseudonym: 'SolsticeGlow',
+          auraGradient: 'from-rose-400 to-pink-500',
+          auraLabel: 'Rose Dawn',
+          avatarIcon: 'sparkle',
+        },
+        content:
+          'You do not have to perform here. Drop the armor. We see you and accept you in your tired state.',
+        createdAt: '45 mins ago',
+        intentBadge: 'Gentle Reflection',
+      },
+    ],
+  },
+  {
+    id: 'post-3',
+    author: {
+      id: 'usr-7',
+      pseudonym: 'CanyonEcho',
+      auraGradient: 'from-orange-400 to-rose-500',
+      auraLabel: 'Terracotta',
+      avatarIcon: 'mountain',
+    },
+    title: 'Severe grief anniversary and feeling disconnected from everything',
+    content:
+      'It has been two years today since I lost my younger brother. Everyone in my life has moved on and expects me to be "back to normal". The grief hits like an anchor. Any grounding tips from fellow grievers who felt completely unmoored?',
+    intent: 'Solution-Oriented Advice Welcome',
+    createdAt: '2026-10-17T15:00:00Z',
+    timeAgo: '4 hours ago',
+    isSensitive: true,
+    sensitiveNotice: 'Mentions bereavement & intense grief anniversary',
+    reactions: {
+      holdingSpace: 142,
+      gentleHug: 98,
+      iHearYou: 63,
+      inspired: 27,
+    },
+    comments: [
+      {
+        id: 'c-5',
+        author: {
+          id: 'usr-8',
+          pseudonym: 'CedarRoots',
+          auraGradient: 'from-emerald-600 to-stone-700',
+          auraLabel: 'Deep Forest',
+          avatarIcon: 'compass',
+        },
+        content:
+          'When my dad passed, someone told me: Grief never shrinks, but our life expands around it like tree rings. On anniversaries, I touch cold water or walk barefoot on soil to pull my senses back into the present.',
+        createdAt: '3 hours ago',
+        intentBadge: 'Shared Experience',
+      },
+    ],
+  },
+];
+
+export const INITIAL_BEACONS: KindnessBeacon[] = [
+  {
+    id: 'b-1',
+    requesterPseudonym: 'CloverLeaf',
+    auraGradient: 'from-emerald-400 to-teal-500',
+    prompt: 'Feeling overwhelming dread about an intense job interview at 9:00 AM.',
+    situationContext: 'Career transition after 8 months of rejection. Imposter syndrome is loud.',
+    neededEnergy: 'Pre-Exam Courage',
+    isActive: true,
+    createdAt: '25 mins ago',
+    pebbles: [
+      {
+        id: 'p-1',
+        senderPseudonym: 'GentleOak',
+        auraColor: '#10b981',
+        message: 'They already invited you because you have value. You are interviewing them too. Breathe low into your belly.',
+        stoneTexture: 'moss-green',
+        createdAt: '18 mins ago',
+      },
+      {
+        id: 'p-2',
+        senderPseudonym: 'MorningMist',
+        auraColor: '#06b6d4',
+        message: 'Your worth was settled before this interview and will remain intact afterward. Rooting for you!',
+        stoneTexture: 'river-slate',
+        createdAt: '10 mins ago',
+      },
+    ],
+  },
+  {
+    id: 'b-2',
+    requesterPseudonym: 'StarlitCloud',
+    auraGradient: 'from-indigo-400 to-purple-500',
+    prompt: 'Solo on a Saturday night. My mind is telling me nobody cares if I vanish.',
+    situationContext: 'Living alone in a new city; quiet rooms make depressive thoughts echo.',
+    neededEnergy: 'Self-Worth Reminder',
+    isActive: true,
+    createdAt: '40 mins ago',
+    pebbles: [
+      {
+        id: 'p-3',
+        senderPseudonym: 'SunlitMoss',
+        auraColor: '#f59e0b',
+        message: 'I am reading your words from across the globe and I care that you are breathing tonight. You matter.',
+        stoneTexture: 'warm-amber',
+        createdAt: '22 mins ago',
+      },
+      {
+        id: 'p-4',
+        senderPseudonym: 'RiverStone',
+        auraColor: '#ec4899',
+        message: 'Wrapped in a cozy blanket here too. Drink warm tea with me. This dark night will turn to dawn.',
+        stoneTexture: 'dawn-rose',
+        createdAt: '12 mins ago',
+      },
+    ],
+  },
+];
+
+export const INITIAL_SOULS: SilentPresenceSoul[] = [
+  { id: 's-1', pseudonym: 'Aura-84', auraColor: '#10b981', x: 22, y: 35, currentBreath: 'inhale', joinedMinutesAgo: 14 },
+  { id: 's-2', pseudonym: 'HavenSeeker', auraColor: '#06b6d4', x: 68, y: 28, currentBreath: 'inhale', joinedMinutesAgo: 22 },
+  { id: 's-3', pseudonym: 'StillWaters', auraColor: '#8b5cf6', x: 40, y: 65, currentBreath: 'hold', joinedMinutesAgo: 8 },
+  { id: 's-4', pseudonym: 'PineShadow', auraColor: '#f59e0b', x: 78, y: 72, currentBreath: 'exhale', joinedMinutesAgo: 31 },
+  { id: 's-5', pseudonym: 'DuskGlow', auraColor: '#ec4899', x: 18, y: 78, currentBreath: 'rest', joinedMinutesAgo: 5 },
+  { id: 's-6', pseudonym: 'ZenRipple', auraColor: '#14b8a6', x: 50, y: 20, currentBreath: 'inhale', joinedMinutesAgo: 19 },
+];
